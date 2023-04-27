@@ -2,7 +2,7 @@
 
 ## This project is a simple BMI calculator API and web frontend implemented using a C-based server and Nginx, running in a Docker container. It calculates and classifies a user's BMI based on their weight and height inputs.
 1. Build docker image yourself:
-    1. Pull the repo`git clone https://github.com/SnakebiteEF2000/BMI-api.git`
+    1. Pull the repo:`git clone https://github.com/SnakebiteEF2000/BMI-api.git`
     2. `cd BMI-api`
     3. `docker build -t nginx_bmi_server .`
     4. `docker run -d -p 80:80 -p 8000:8000 --name nginx_bmi_server_container nginx_bmi_server`
