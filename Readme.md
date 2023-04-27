@@ -5,6 +5,10 @@
 2. `cd BMI-api`
 3. `docker build -t nginx_bmi_server .`
 4. `docker run -d -p 80:80 -p 8000:8000 --name nginx_bmi_server_container nginx_bmi_server`
-5. `curl "http://localhost:8000/bmi?weight=90&height=171"`
+
+Navigate to `http://localhost`
+
+Test API with (example data:weight= 90kg & height= 171 cm):
+`curl "http://localhost:8000/bmi?weight=90&height=171"`
 
 ## This is absolutely useless and just a proof of concept that I made in one of my programming lessons
