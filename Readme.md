@@ -1,0 +1,1 @@
+This is absolutely useless and just a proof of concept that I made in one of my programming lessons
