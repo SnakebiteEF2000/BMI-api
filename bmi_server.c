@@ -7,76 +7,63 @@
 #include <unistd.h>
 
 #define PORT 8000
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 2048
 
-float berechne_bmi(float gewicht, float groesse_m) {
-  return gewicht / (groesse_m * groesse_m);
+double calculate_bmi(double weight, double height) {
+  double height_in_meters = height / 100.0;
+  return weight / (height_in_meters * height_in_meters);
 }
 
-void einstufung_bmi(float bmi, char *result) {
-  if (bmi < 18.5) {
-    sprintf(result, "Ihr BMI ist %.2f, Sie sind damit untergewichtig.\n", bmi);
-  } else if (bmi >= 18.5 && bmi <= 24.9) {
-    sprintf(result, "Ihr BMI ist %.2f, Sie sind damit im Normalbereich.\n", bmi);
-  } else {
-    sprintf(result, "Ihr BMI ist %.2f, Sie sind damit übergewichtig.\n", bmi);
-    }
+int main() {
+  int server_fd, new_socket;
+  struct sockaddr_in address;
+  int addrlen = sizeof(address);
+  char buffer[BUFFER_SIZE] = {0};
+  double weight, height;
+  double bmi;
+  char response[BUFFER_SIZE];
+
+  // Create a socket
+  if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+    perror("Socket creation failed");
+    exit(EXIT_FAILURE);
   }
 
-  int main() {
-    int server_fd, client_fd, addrlen;
-    struct sockaddr_in server_addr, client_addr;
-    char buffer[BUFFER_SIZE];
+  // Bind the socket to the IP address and port
+  address.sin_family = AF_INET;
+  address.sin_addr.s_addr = INADDR_ANY;
+  address.sin_port = htons(PORT);
 
-    server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_fd == 0) {
-        perror("Socket creation failed");
+  if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+    perror("Bind failed");
+    exit(EXIT_FAILURE);
+  }
+
+  // Listen for connection requests
+  if (listen(server_fd, 10) < 0) {
+    perror("Listen failed");
+    exit(EXIT_FAILURE);
+  }
+
+  while (1) {
+    // Accept a connection
+    if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen)) < 0) {
+      perror("Accept failed");
       exit(EXIT_FAILURE);
-        }
-
-        server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-        server_addr.sin_port = htons(PORT);
-
-        if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Bind failed");
-          exit(EXIT_FAILURE);
-        }
-
-        if (listen(server_fd, 3) < 0) {
-        perror("Listen failed");
-          exit(EXIT_FAILURE);
-        }
-
-        while (1) {
-        addrlen = sizeof(client_addr);
-
-        client_fd = accept(server_fd, (struct sockaddr *)&client_addr, (socklen_t *)&addrlen);
-        if (client_fd < 0) {
-            perror("Accept failed");
-          exit(EXIT_FAILURE);
-            }
-
-            memset(buffer, 0, BUFFER_SIZE);
-        read(client_fd, buffer, BUFFER_SIZE);
-
-        float gewicht, groesse_cm, groesse_m;
-        sscanf(buffer, "GET /?gewicht=%f&groesse=%f", &gewicht, &groesse_cm);
-        groesse_m = groesse_cm / 100;
-
-        float bmi = berechne_bmi(gewicht, groesse_m);
-        char result[100];
-        einstufung_bmi(bmi, result);
-
-        char response[BUFFER_SIZE];
-        snprintf(response, BUFFER_SIZE,
-                 "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s",
-                 strlen(result), result);
-
-        send(client_fd, response, strlen(response), 0);
-
-        close(client_fd);
     }
 
-    return 0;
+    // Read the input from the client
+    read(new_socket, buffer, BUFFER_SIZE);
+    sscanf(buffer, "GET /bmi?weight=%lf&height=%lf", &weight, &height);
+
+    // Calculate the BMI
+    bmi = calculate_bmi(weight, height);
+
+    // Send the response with Access-Control-Allow-Origin header
+    snprintf(response, BUFFER_SIZE, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nAccess-Control-Allow-Origin: *\r\n\r\nBMI: %.2f", bmi);
+    send(new_socket, response, strlen(response), 0);
+    close(new_socket);
+  }
+
+  return 0;
 }
