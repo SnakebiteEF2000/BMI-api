@@ -75,7 +75,7 @@ const char *classify_bmi(double bmi) {
         snprintf(response, BUFFER_SIZE, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nAccess-Control-Allow-Origin: *\r\n\r\nBMI: %.2f, Einstufung: %s", bmi, classification);
         send(new_socket, response, strlen(response), 0);
         close(new_socket);
-    }
+        }
 
     return 0;
 }
